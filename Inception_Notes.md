@@ -333,3 +333,13 @@ secrets:
 
 **Next:**  
 We’ll start working on the `mariadb/` folder and its Dockerfile.
+
+
+## 🖋️ Step 6: MariaDB Service — Dockerfile and Initialization
+
+Follow the step-by-step instructions in `mariadb.md`.
+
+---
+
+**Next:**  
+We'll configure the WordPress container.
