@@ -49,7 +49,7 @@ inception/
 
 ### 🛠️ What to do now
 
-#### 🔧 1. Create directories and files:
+#### 🔧 Create directories and files:
 
 ```bash
 mkdir -p ~/inception/{secrets,srcs/requirements/{nginx,wordpress,mariadb}}
@@ -74,7 +74,7 @@ touch ~/inception/secrets/db_root_password.txt
 
 ---
 
-#### 🔧 2. Create a basic Makefile
+#### 🔧 Create a basic Makefile
 
 Edit `Makefile` and paste:
 
@@ -180,7 +180,7 @@ You’ll use these variables in your `docker-compose.yml` and service Dockerfile
 
 ## 🖋️ Step 4: Add Secrets and Environment Variables
 
-### 🔑 1. Add Passwords to `secrets/` Files
+### 🔑 Add Passwords to `secrets/` Files
 
 Run these commands to add your real passwords to the secrets files:
 
@@ -193,3 +193,143 @@ echo "secureadminpass"  > ~/inception/secrets/credentials.txt
 > ⚠️ These files must be specified as Docker secrets in `docker-compose.yml` (we’ll do this in the next step).
 
 ---
+## 📝 Step 5: Writing docker-compose.yml
+
+### 🗂️ **docker-compose.yml Overview**
+
+The `docker-compose.yml` file defines your three main services:
+
+- **nginx** — Entry point, listens on port 443 with TLS  
+- **mariadb** — Database service  
+- **wordpress** — WordPress with PHP-FPM (without nginx)
+
+It also defines:
+
+- **Volumes** — Persistent storage in `/home/irychkov/data/...`
+- **Network** — Custom bridge network called `inception`
+- **Secrets** — Password files from the `secrets/` folder
+
+---
+
+### 📋 **Template for `docker-compose.yml`**
+
+Open the file:
+
+```bash
+nano ~/inception/srcs/docker-compose.yml
+```
+
+Paste the following:
+
+```yaml
+version: "3.8"
+
+services:
+	mariadb:
+		container_name: mariadb
+		build: ./requirements/mariadb
+		env_file: .env
+		secrets:
+			- db_root_password
+			- db_password
+		volumes:
+			- mariadb_data:/var/lib/mysql
+		networks:
+			- inception
+		restart: unless-stopped
+
+	wordpress:
+		container_name: wordpress
+		build: ./requirements/wordpress
+		env_file: .env
+		secrets:
+			- db_password
+			- credentials
+		volumes:
+			- wordpress_data:/var/www/html
+		depends_on:
+			- mariadb
+		networks:
+			- inception
+		restart: unless-stopped
+
+	nginx:
+		container_name: nginx
+		build: ./requirements/nginx
+		env_file: .env
+		volumes:
+			- wordpress_data:/var/www/html
+		ports:
+			- "443:443"
+		depends_on:
+			- wordpress
+		networks:
+			- inception
+		restart: unless-stopped
+
+volumes:
+	mariadb_data:
+		driver: local
+		name: mariadb_data
+		driver_opts:
+			type: none
+			o: bind
+			device: /home/irychkov/data/mariadb
+	wordpress_data:
+		driver: local
+		name: wordpress_data
+		driver_opts:
+			type: none
+			o: bind
+			device: /home/irychkov/data/wordpress
+
+networks:
+	inception:
+		driver: bridge
+
+secrets:
+	db_root_password:
+		file: ../../secrets/db_root_password.txt
+	db_password:
+		file: ../../secrets/db_password.txt
+	credentials:
+		file: ../../secrets/credentials.txt
+```
+
+---
+
+### 📝 **Explanation**
+
+- **`build:`** Points to each service's Dockerfile folder.
+- **`env_file:`** Loads environment variables from `.env`.
+- **`volumes:`** Stores data persistently, even if the container stops.
+- **`secrets:`** Securely passes sensitive values like passwords.
+- **`restart: unless-stopped`** — Services auto-restart if they crash.
+
+---
+
+### ✅ **Next Steps**
+
+1. **Check paths and structure:**  
+	 Make sure all referenced directories exist.
+
+2. **Create persistent data directories:**
+
+	 ```bash
+	 mkdir -p /home/irychkov/data/mariadb
+	 mkdir -p /home/irychkov/data/wordpress
+	 ```
+
+3. **Build and run your project:**
+
+	 ```bash
+	 cd ~/inception
+	 make
+	 ```
+
+	 You should see your images build and containers start.
+
+---
+
+**Next:**  
+We’ll start working on the `mariadb/` folder and its Dockerfile.
