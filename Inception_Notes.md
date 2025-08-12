@@ -135,18 +135,18 @@ Paste this example:
 DOMAIN_NAME=irychkov.42.fr
 
 # MYSQL (MariaDB)
-MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password.txt
+MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-MYSQL_PASSWORD_FILE=/run/secrets/db_password.txt
+MYSQL_PASSWORD_FILE=/run/secrets/db_password
 
 # WORDPRESS
 WORDPRESS_DB_HOST=mariadb:3306
 WORDPRESS_DB_NAME=wordpress
 WORDPRESS_DB_USER=wp_user
-WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password.txt
+WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
 WP_ADMIN_USER=main_user
-WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials.txt
+WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
 WP_ADMIN_EMAIL=admin@irychkov.42.fr
 WP_SITE_TITLE=Inception42
 ```

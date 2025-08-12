@@ -2,6 +2,11 @@
 
 # Read secrets from mounted secret files
 MYSQL_ROOT_PASSWORD=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+if [ ! -f "$MYSQL_ROOT_PASSWORD_FILE" ]; then
+  echo "❌ DB password file missing"
+  exit 1
+fi
+
 MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
 
 # Initialize database if not already done

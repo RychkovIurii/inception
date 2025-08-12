@@ -35,7 +35,7 @@ services:
     volumes:
       - wordpress_data:/var/www/html
     ports:
-      - "443:443"
+      - "8443:443" # Temp it was 443:443
     depends_on:
       - wordpress
     networks:

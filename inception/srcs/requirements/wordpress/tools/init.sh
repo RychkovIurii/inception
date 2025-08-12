@@ -3,6 +3,11 @@
 # Read sensitive passwords from Docker secrets files
 # These files are mounted as volumes and contain the actual password values
 WORDPRESS_DB_PASSWORD=$(cat "$WORDPRESS_DB_PASSWORD_FILE")
+if [ ! -f "$WORDPRESS_DB_PASSWORD_FILE" ]; then
+  echo "❌ DB password file missing"
+  exit 1
+fi
+
 WP_ADMIN_PASSWORD=$(cat "$WP_ADMIN_PASSWORD_FILE")
 
 # Wait for MariaDB to be ready before proceeding
