@@ -1,5 +1,5 @@
 
-# Step : WordPress Service — Dockerfile and Setup
+# Step: WordPress Service — Dockerfile and Setup
 
 This step explains how to set up the WordPress container using Alpine and PHP-FPM (no nginx inside).
 

@@ -348,3 +348,12 @@ We'll configure the WordPress container.
 ## 🖋️ Step 7: WordPress Service — Dockerfile and Initialization
 
 Follow the step-by-step instructions in `wordpress.md`.
+
+**Next:**  
+We'll configure the NGINX container.
+
+
+## 🖋️ Step 8: NGINX Setup with TLS — Dockerfile and Configuration
+
+Follow the step-by-step instructions in `nginx.md`.
+

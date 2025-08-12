@@ -1,5 +1,5 @@
 
-# Step 10: MariaDB Service — Dockerfile and Initialization
+# Step: MariaDB Service — Dockerfile and Initialization
 
 This step guides you through setting up the `mariadb` container from scratch using Alpine. It will read secrets, configure the DB, and run safely.
 
