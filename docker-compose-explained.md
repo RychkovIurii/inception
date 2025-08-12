@@ -165,7 +165,7 @@ networks:
 ```yaml
 secrets:
   db_root_password:
-    file: ../../secrets/db_root_password.txt
+    file: ../secrets/db_root_password.txt
 ```
 - Maps a file on the host into `/run/secrets/db_root_password` in the container.
 

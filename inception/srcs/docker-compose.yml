@@ -64,8 +64,8 @@ networks:
 
 secrets:
   db_root_password:
-    file: ../../secrets/db_root_password.txt
+    file: ../secrets/db_root_password.txt
   db_password:
-    file: ../../secrets/db_password.txt
+    file: ../secrets/db_password.txt
   credentials:
-    file: ../../secrets/credentials.txt
+    file: ../secrets/credentials.txt
