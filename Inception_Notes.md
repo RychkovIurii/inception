@@ -135,16 +135,16 @@ Paste this example:
 DOMAIN_NAME=irychkov.42.fr
 
 # MYSQL (MariaDB)
-MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password.txt
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-MYSQL_PASSWORD_FILE=/run/secrets/db_password
+MYSQL_PASSWORD_FILE=/run/secrets/db_password.txt
 
 # WORDPRESS
 WORDPRESS_DB_HOST=mariadb:3306
 WORDPRESS_DB_NAME=wordpress
 WORDPRESS_DB_USER=wp_user
-WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
+WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password.txt
 WP_ADMIN_USER=main_user
 WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials.txt
 WP_ADMIN_EMAIL=admin@irychkov.42.fr
@@ -343,3 +343,8 @@ Follow the step-by-step instructions in `mariadb.md`.
 
 **Next:**  
 We'll configure the WordPress container.
+
+
+## 🖋️ Step 7: WordPress Service — Dockerfile and Initialization
+
+Follow the step-by-step instructions in `wordpress.md`.

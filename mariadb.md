@@ -82,10 +82,10 @@ chmod +x ~/inception/srcs/requirements/mariadb/tools/init.sh
 
 Required variables in `.env`:
 ```
-MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
+MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password.txt
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-MYSQL_PASSWORD_FILE=/run/secrets/db_password
+MYSQL_PASSWORD_FILE=/run/secrets/db_password.txt
 ```
 
 Secrets needed in `/secrets/`:
