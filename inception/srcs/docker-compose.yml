@@ -7,6 +7,12 @@ services:
     secrets:
       - db_root_password
       - db_password
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 10
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -23,7 +29,8 @@ services:
     volumes:
       - wordpress_data:/var/www/html
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - inception
     restart: unless-stopped
@@ -49,14 +56,14 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/irychkov/data/mariadb
+      device: /home/irychkov/data/mariadb1
   wordpress_data:
     driver: local
     name: wordpress_data
     driver_opts:
       type: none
       o: bind
-      device: /home/irychkov/data/wordpress
+      device: /home/irychkov/data/wordpress1
 
 networks:
   inception:

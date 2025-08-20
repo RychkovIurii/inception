@@ -48,6 +48,11 @@ RUN curl -O https://wordpress.org/latest.tar.gz && \
     mv wordpress/* . && \
     rm -rf wordpress latest.tar.gz
 
+# Install WP-CLI
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
+
 # Copy the WordPress initialization and configuration script
 COPY tools/init.sh /init.sh
 # Make the initialization script executable
