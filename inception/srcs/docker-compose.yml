@@ -56,14 +56,14 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/irychkov/data/mariadb1
+      device: /home/irychkov/data/mariadb
   wordpress_data:
     driver: local
     name: wordpress_data
     driver_opts:
       type: none
       o: bind
-      device: /home/irychkov/data/wordpress1
+      device: /home/irychkov/data/wordpress
 
 networks:
   inception:

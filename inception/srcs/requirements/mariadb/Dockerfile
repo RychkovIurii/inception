@@ -12,6 +12,9 @@ RUN apk update && apk add --no-cache mariadb mariadb-client su-exec openrc
 # /run/mysqld is where MariaDB stores its socket file and PID file
 RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
 
+COPY tools/healthcheck.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
 # Copy the database initialization script from the host to the container
 # This script will handle database setup, user creation, and initial configuration
 COPY tools/init.sh /init.sh
