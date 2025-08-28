@@ -6,7 +6,7 @@
 #    By: irychkov <irychkov@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/26 09:53:53 by irychkov          #+#    #+#              #
-#    Updated: 2025/08/28 14:34:12 by irychkov         ###   ########.fr        #
+#    Updated: 2025/08/28 15:28:22 by irychkov         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,7 +42,6 @@ fclean: down
 	fi
 	sudo sed -i '/irychkov.42.fr/d' /etc/hosts; \
 	docker system prune -af --volumes
-# rm -rf /home/irychkov/data
 # prune removes unused data, -a removes all unused images, not just dangling ones,
 # -f forces the removal without confirmation, --volumes removes all unused volumes
 
