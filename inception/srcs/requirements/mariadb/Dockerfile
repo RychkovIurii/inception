@@ -1,5 +1,5 @@
-# Use Alpine Linux 3.18 as the base image for a lightweight container
-FROM alpine:3.18
+# Use Alpine Linux 3.21 as the base image for a lightweight container
+FROM alpine:3.21
 
 # Update package index and install MariaDB server, client, and required utilities
 # - mariadb: The main database server
@@ -17,10 +17,7 @@ RUN apk update && apk add --no-cache \
 # /var/lib/mysql is the default data directory for MariaDB databases
 # Ensuring these directories exist and have the correct permissions is crucial for MariaDB to run properly
 RUN mkdir -p /run/mysqld /var/lib/mysql && \
-    chown -R mysql:mysql /run/mysqld /var/lib/mysql
-
-COPY tools/healthcheck.sh /healthcheck.sh
-RUN chmod +x /healthcheck.sh
+    chown -R mysql:mysql /run/mysqld /var/lib/mysql /var/log/mysql
 
 # Copy the database initialization script from the host to the container
 # This script will handle database setup, user creation, and initial configuration
