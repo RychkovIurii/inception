@@ -27,10 +27,6 @@ RUN chmod +x /init.sh
 # Expose the default MariaDB port
 EXPOSE 3306
 
-# Switch to the mysql user for security best practices
-# Running the database as a non-root user reduces security risks
-USER mysql
-
 # Set the initialization script as the container's entry point
 # This script will be executed when the container starts
 ENTRYPOINT ["/init.sh"]
