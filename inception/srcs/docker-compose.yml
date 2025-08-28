@@ -9,7 +9,7 @@ services:
       - db_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      start_period: 30s
+      start_period: 60s
       interval: 5s
       timeout: 3s
       retries: 10
