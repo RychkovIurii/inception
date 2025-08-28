@@ -40,9 +40,12 @@ services:
     build: ./requirements/nginx
     env_file: .env
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress_data:/var/www/html:ro   # <-- read-only to nginx
+#    secrets: # Optional: Use your own SSL certs or let Nginx create self-signed ones
+#      - ssl_cert
+#      - ssl_key
     ports:
-      - "8443:443" # Temp it was 443:443
+      - "8443:443" # swap to 443:443 in prod
     depends_on:
       - wordpress
     networks:
@@ -76,3 +79,8 @@ secrets:
     file: ../secrets/db_password.txt
   credentials:
     file: ../secrets/credentials.txt
+# Optional: Use your own SSL certs or let Nginx create self-signed ones
+#  ssl_cert:
+#    file: ../secrets/ssl_cert.pem
+#  ssl_key:
+#    file: ../secrets/ssl_key.pem

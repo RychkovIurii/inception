@@ -4,13 +4,20 @@ FROM alpine:3.18
 # Update package index and install MariaDB server, client, and required utilities
 # - mariadb: The main database server
 # - mariadb-client: Client tools for connecting to MariaDB
-# - su-exec: Alternative to sudo for dropping privileges in containers
-# - openrc: Init system for managing services in Alpine
-RUN apk update && apk add --no-cache mariadb mariadb-client su-exec openrc bash
+# - bash: For scripting and running bash scripts
+# - util-linux: Provides the 'flock' command used in health checks
+# rm -rf /var/cache/apk/* is used to clean up the package cache to reduce image size
+RUN apk update && apk add --no-cache \
+    mariadb mariadb-client \
+    bash util-linux \
+ && rm -rf /var/cache/apk/*
 
 # Create the MariaDB runtime directory and set proper ownership
 # /run/mysqld is where MariaDB stores its socket file and PID file
-RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
+# /var/lib/mysql is the default data directory for MariaDB databases
+# Ensuring these directories exist and have the correct permissions is crucial for MariaDB to run properly
+RUN mkdir -p /run/mysqld /var/lib/mysql && \
+    chown -R mysql:mysql /run/mysqld /var/lib/mysql
 
 COPY tools/healthcheck.sh /healthcheck.sh
 RUN chmod +x /healthcheck.sh

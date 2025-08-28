@@ -1,60 +1,107 @@
 #!/bin/sh
+set -eu
 
-# Read sensitive passwords from Docker secrets files
-# These files are mounted as volumes and contain the actual password values
-if [ ! -f "$WORDPRESS_DB_PASSWORD_FILE" ]; then
-  echo "❌ DB password file missing"
-  exit 1
+WP_PATH="/var/www/html"
+WP="wp --path=${WP_PATH}"
+
+# ---------- helpers ----------
+need() { eval "v=\${$1:-}"; [ -n "$v" ] || { echo "❌ Missing env: $1" >&2; exit 1; }; }
+trim_file() { tr -d '\r\n' < "$1"; }
+
+# ---------- required env ----------
+need WORDPRESS_DB_HOST
+need WORDPRESS_DB_USER
+need WORDPRESS_DB_NAME
+need WP_ADMIN_USER
+need WP_ADMIN_EMAIL
+need DOMAIN_NAME
+need WORDPRESS_DB_PASSWORD_FILE
+need WP_ADMIN_PASSWORD_FILE
+
+# ---------- secrets (trim trailing newlines) ----------
+WORDPRESS_DB_PASSWORD="$(trim_file "$WORDPRESS_DB_PASSWORD_FILE")"
+WP_ADMIN_PASSWORD="$(trim_file "$WP_ADMIN_PASSWORD_FILE")"
+
+# optional second user secrets
+if [ -n "${WP_SECOND_PASSWORD_FILE:-}" ] && [ -f "${WP_SECOND_PASSWORD_FILE:-}" ]; then
+  WP_SECOND_PASSWORD="$(trim_file "$WP_SECOND_PASSWORD_FILE")"
 fi
-WORDPRESS_DB_PASSWORD=$(cat "$WORDPRESS_DB_PASSWORD_FILE")
 
-if [ ! -f "$WP_ADMIN_PASSWORD_FILE" ]; then
-  echo "❌ Admin password file missing"
-  exit 1
-fi
-WP_ADMIN_PASSWORD=$(cat "$WP_ADMIN_PASSWORD_FILE")
+# ---------- ensure runtime dirs (in case) ----------
+mkdir -p /run/php
+# /var/www/html ownership is already set in Dockerfile; keep tolerant here:
+chown -R www-data:www-data "$WP_PATH" /run/php 2>/dev/null || true
 
-# Wait for MariaDB to be ready before proceeding
-# This loop continuously tries to connect to the database until it succeeds
-# This ensures WordPress doesn't try to connect before the database is available
-until mariadb -h "$WORDPRESS_DB_HOST" -u "$WORDPRESS_DB_USER" -p"$WORDPRESS_DB_PASSWORD" -e ";" ; do
-  echo "Waiting for MariaDB..."
+# ---------- wait for MariaDB ----------
+echo "⏳ Waiting for MariaDB at ${WORDPRESS_DB_HOST}..."
+until mariadb -h "$WORDPRESS_DB_HOST" -u "$WORDPRESS_DB_USER" -p"$WORDPRESS_DB_PASSWORD" -e ";" >/dev/null 2>&1; do
   sleep 2
 done
 echo "✅ MariaDB is ready!"
 
-# Configure WordPress database connection if wp-config.php doesn't exist
-# Create wp-config.php
-if [ ! -f wp-config.php ]; then
+# ---------- sanity: wp-cli ----------
+if ! command -v wp >/dev/null 2>&1; then
+  echo "❌ wp-cli not found on PATH" >&2
+  exit 1
+fi
+
+# ---------- create wp-config.php if missing ----------
+if [ ! -f "${WP_PATH}/wp-config.php" ]; then
   echo "⚙️ Creating wp-config.php..."
-  wp config create \
+  $WP config create \
     --dbname="$WORDPRESS_DB_NAME" \
     --dbuser="$WORDPRESS_DB_USER" \
     --dbpass="$WORDPRESS_DB_PASSWORD" \
     --dbhost="$WORDPRESS_DB_HOST" \
     --dbprefix="wp_" \
-    --allow-root
-  echo "✅ wp-config.php created"
+    --skip-check
+
+  # salts/keys
+  $WP config shuffle-salts || $WP config generate
+
+  # force admin over https & handle reverse proxy
+  $WP config set FORCE_SSL_ADMIN true --raw
+  if ! grep -q "HTTP_X_FORWARDED_PROTO" "${WP_PATH}/wp-config.php"; then
+    printf "\nif (isset(\$_SERVER['HTTP_X_FORWARDED_PROTO']) && \$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') { \$_SERVER['HTTPS'] = 'on'; }\n" >> "${WP_PATH}/wp-config.php"
+  fi
+
+  echo "✅ wp-config.php created."
 else
-  echo "✅ wp-config.php already exists"
+  echo "✅ wp-config.php already exists."
 fi
 
-# Install WordPress if it hasn't been installed yet
-# This creates the initial database tables and sets up the admin user
-if ! wp core is-installed --allow-root; then
-  wp core install \
-    --url="https://${DOMAIN_NAME}" \
-    --title="${WP_SITE_TITLE}" \
-    --admin_user="${WP_ADMIN_USER}" \
-    --admin_password="${WP_ADMIN_PASSWORD}" \
-    --admin_email="${WP_ADMIN_EMAIL}" \
-    --skip-email \
-    --allow-root
-  echo "✅ WordPress installed"
+# ---------- install core (idempotent + small retry) ----------
+if ! $WP core is-installed >/dev/null 2>&1; then
+  echo "⚙️ Installing WordPress core..."
+  i=0
+  until $WP core install \
+      --url="https://${DOMAIN_NAME}" \
+      --title="${WP_SITE_TITLE:-WordPress}" \
+      --admin_user="${WP_ADMIN_USER}" \
+      --admin_password="${WP_ADMIN_PASSWORD}" \
+      --admin_email="${WP_ADMIN_EMAIL}" \
+      --skip-email; do
+    i=$((i+1))
+    [ $i -ge 5 ] && { echo "❌ WP install failed after retries" >&2; exit 1; }
+    echo "…retrying WP install ($i/5)…"
+    sleep 2
+  done
+  echo "✅ WordPress installed."
 else
-  echo "✅ WordPress already installed"
+  echo "✅ WordPress already installed."
 fi
 
-# Start PHP-FPM in the foreground
-# The -F flag keeps the process running in the foreground so the container doesn't exit
-exec php-fpm81 -F
+# ---------- optional second user ----------
+if [ -n "${WP_SECOND_USER:-}" ] && [ -n "${WP_SECOND_EMAIL:-}" ] && [ -n "${WP_SECOND_PASSWORD:-}" ]; then
+  if ! $WP user exists "$WP_SECOND_USER" --quiet; then
+    $WP user create "$WP_SECOND_USER" "$WP_SECOND_EMAIL" \
+      --role="${WP_SECOND_ROLE:-author}" \
+      --user_pass="$WP_SECOND_PASSWORD"
+    echo "👤 Created secondary user '${WP_SECOND_USER}'."
+  else
+    echo "👤 Secondary user '${WP_SECOND_USER}' already exists."
+  fi
+fi
+
+# ---------- hand off to CMD ----------
+exec "$@"

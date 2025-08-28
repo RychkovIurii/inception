@@ -1,17 +1,36 @@
 #!/bin/sh
+set -eu
 
-# Generate self-signed cert if not exists
-if [ ! -f /etc/nginx/ssl/nginx.crt ]; then
-  openssl req -x509 -nodes -days 365 \
-    -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key \
-    -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=FR/ST=42/L=Paris/O=42/OU=Student/CN=${DOMAIN_NAME}"
+# Inputs (optionally via docker secrets)
+SSL_CERT_SRC="${SSL_CERT_SRC:-/run/secrets/ssl_cert}"
+SSL_KEY_SRC="${SSL_KEY_SRC:-/run/secrets/ssl_key}"
+SSL_CERT_DST="/etc/nginx/ssl/tls.crt"
+SSL_KEY_DST="/etc/nginx/ssl/tls.key"
+
+DOMAIN="${DOMAIN_NAME:-localhost}"
+
+# If secrets exist, use them; otherwise create a self-signed pair once
+if [ -f "$SSL_CERT_SRC" ] && [ -f "$SSL_KEY_SRC" ]; then
+  cp "$SSL_CERT_SRC" "$SSL_CERT_DST"
+  cp "$SSL_KEY_SRC"  "$SSL_KEY_DST"
+  chmod 600 "$SSL_KEY_DST"
+  echo "🔐 Using TLS certs from secrets."
+else
+  if [ ! -f "$SSL_CERT_DST" ] || [ ! -f "$SSL_KEY_DST" ]; then
+    echo "🛠  Generating self-signed TLS cert for ${DOMAIN}..."
+    openssl req -x509 -nodes -days 365 \
+      -newkey rsa:2048 \
+      -keyout "$SSL_KEY_DST" \
+      -out   "$SSL_CERT_DST" \
+      -subj "/CN=${DOMAIN}"
+    chmod 600 "$SSL_KEY_DST"
+  else
+    echo "🔐 Using existing self-signed TLS certs."
+  fi
 fi
 
-# Start nginx in foreground mode (daemon off)
-# In Docker containers, the main process must run in the foreground to keep the container alive
-# If nginx runs as a daemon (background process), the container would exit immediately
-# because Docker needs a running process to maintain the container's lifecycle
-# The 'daemon off;' directive ensures nginx stays in the foreground as PID 1
-exec nginx -g 'daemon off;'
+# Ensure webroot exists (mounted from wordpress container volume)
+mkdir -p /var/www/html
+
+# Hand off to Nginx (CMD)
+exec "$@"
