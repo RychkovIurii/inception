@@ -6,7 +6,7 @@ FROM alpine:3.18
 # - mariadb-client: Client tools for connecting to MariaDB
 # - su-exec: Alternative to sudo for dropping privileges in containers
 # - openrc: Init system for managing services in Alpine
-RUN apk update && apk add --no-cache mariadb mariadb-client su-exec openrc
+RUN apk update && apk add --no-cache mariadb mariadb-client su-exec openrc bash
 
 # Create the MariaDB runtime directory and set proper ownership
 # /run/mysqld is where MariaDB stores its socket file and PID file
@@ -20,6 +20,9 @@ RUN chmod +x /healthcheck.sh
 COPY tools/init.sh /init.sh
 # Make the initialization script executable
 RUN chmod +x /init.sh
+
+# Expose the default MariaDB port
+EXPOSE 3306
 
 # Switch to the mysql user for security best practices
 # Running the database as a non-root user reduces security risks

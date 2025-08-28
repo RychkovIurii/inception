@@ -12,4 +12,7 @@ COPY conf/default.conf /etc/nginx/http.d/default.conf
 COPY tools/init.sh /init.sh
 RUN chmod +x /init.sh
 
+# Expose HTTPS port
+EXPOSE 443
+
 ENTRYPOINT ["/init.sh"]

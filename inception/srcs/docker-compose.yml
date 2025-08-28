@@ -8,7 +8,7 @@ services:
       - db_root_password
       - db_password
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "/healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 30s
       interval: 5s
       timeout: 3s

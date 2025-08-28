@@ -58,6 +58,9 @@ COPY tools/init.sh /init.sh
 # Make the initialization script executable
 RUN chmod +x /init.sh
 
+# Expose the port used by PHP-FPM
+EXPOSE 9000
+
 # Set the initialization script as the container's entry point
 # This script will configure WordPress, connect to the database, and start PHP-FPM
 ENTRYPOINT ["/init.sh"]
