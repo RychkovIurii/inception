@@ -6,7 +6,7 @@
 #    By: irychkov <irychkov@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/26 09:53:53 by irychkov          #+#    #+#              #
-#    Updated: 2025/08/28 14:33:47 by irychkov         ###   ########.fr        #
+#    Updated: 2025/08/28 14:34:12 by irychkov         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,9 @@ NAME=inception
 all:
 	@if ! grep -q irychkov /etc/hosts; then \
 		echo 127.0.0.1	irychkov.42.fr | sudo tee -a /etc/hosts; \
+	fi
+	@if [ ! -d "/home/irychkov/data" ]; then \
+		mkdir -p /home/irychkov/data; \
 	fi
 	@if [ ! -d "/home/irychkov/data/mariadb" ]; then \
 		mkdir -p /home/irychkov/data/mariadb; \
