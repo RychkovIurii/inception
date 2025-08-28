@@ -6,7 +6,7 @@
 #    By: irychkov <irychkov@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/26 09:53:53 by irychkov          #+#    #+#              #
-#    Updated: 2025/08/28 14:32:18 by irychkov         ###   ########.fr        #
+#    Updated: 2025/08/28 14:33:47 by irychkov         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,9 @@ fclean: down
 	fi
 	@if [ -d "/home/irychkov/data/wordpress" ]; then \
 		rm -rf /home/irychkov/data/wordpress; \
+	fi
+	@if [ -d "/home/irychkov/data" ]; then \
+		rm -rf /home/irychkov/data; \
 	fi
 	sudo sed -i '/irychkov.42.fr/d' /etc/hosts; \
 	docker system prune -af --volumes
