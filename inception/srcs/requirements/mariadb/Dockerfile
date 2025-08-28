@@ -16,7 +16,7 @@ RUN apk update && apk add --no-cache \
 # /run/mysqld is where MariaDB stores its socket file and PID file
 # /var/lib/mysql is the default data directory for MariaDB databases
 # Ensuring these directories exist and have the correct permissions is crucial for MariaDB to run properly
-RUN mkdir -p /run/mysqld /var/lib/mysql && \
+RUN mkdir -p /run/mysqld /var/lib/mysql /var/log/mysql && \
     chown -R mysql:mysql /run/mysqld /var/lib/mysql /var/log/mysql
 
 # Copy the database initialization script from the host to the container
