@@ -33,4 +33,4 @@ fi
 mkdir -p /var/www/html
 
 # Hand off to Nginx (CMD)
-exec "$@"
+exec nginx -g 'daemon off;'

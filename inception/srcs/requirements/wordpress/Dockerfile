@@ -1,5 +1,5 @@
-# Use Alpine Linux 3.20.3 as the base image for a lightweight container
-FROM alpine:3.20.3
+# Use Alpine Linux 3.21 as the base image for a lightweight container
+FROM alpine:3.21
 
 # Update package index and install PHP 8.3 with required extensions for WordPress
 # Core PHP packages:

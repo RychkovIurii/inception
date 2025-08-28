@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.21
 
 # Update package index and install Nginx and OpenSSL for serving WordPress over HTTPS
 # - nginx: High-performance web server
@@ -21,5 +21,3 @@ RUN chmod +x /init.sh
 EXPOSE 443
 
 ENTRYPOINT ["/init.sh"]
-# Keep master process in foreground
-CMD ["nginx", "-g", "daemon off;"]
