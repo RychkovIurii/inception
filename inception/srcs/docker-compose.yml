@@ -27,7 +27,7 @@ services:
       - db_password
       - credentials
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress_data:/var/www/wp
     depends_on:
       mariadb:
         condition: service_healthy
@@ -40,7 +40,7 @@ services:
     build: ./requirements/nginx
     env_file: .env
     volumes:
-      - wordpress_data:/var/www/html:ro   # <-- read-only to nginx
+      - wordpress_data:/var/www/wp:ro   # <-- read-only to nginx
 #    secrets: # Optional: Use your own SSL certs or let Nginx create self-signed ones
 #      - ssl_cert
 #      - ssl_key
