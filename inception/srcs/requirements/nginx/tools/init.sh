@@ -30,7 +30,7 @@ else
 fi
 
 # Ensure webroot exists (mounted from wordpress container volume)
-mkdir -p /var/www/html
+mkdir -p /var/www/wp
 
 # Hand off to Nginx (CMD)
 exec nginx -g 'daemon off;'
