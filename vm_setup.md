@@ -54,8 +54,13 @@ You’ll need a Linux distribution to install inside the VM.
 Follow the step-by-step instructions in `docker-install.md`.
 
 ---
+### 6️⃣ Map domain name to hosts on VM
 
-### 6️⃣ Static IP and hostname
+```bash
+echo "127.0.0.1 irychkov.42.fr" | sudo tee -a /etc/hosts
+```
+
+### Static IP and hostname (OPTIONAL if you have root to host)
 
 To access your VM via a browser using a fake domain like `login.42.fr` (e.g. `irychkov.42.fr`), you need to assign your VM a **static IP** that's accessible from your host machine.
 

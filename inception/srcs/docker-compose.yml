@@ -45,7 +45,7 @@ services:
 #      - ssl_cert
 #      - ssl_key
     ports:
-      - "8443:443" # swap to 443:443 in prod
+      - "443:443"
     depends_on:
       - wordpress
     networks:
