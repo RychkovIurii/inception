@@ -18,9 +18,6 @@ MYSQL_PASSWORD="$(trim_file "$MYSQL_PASSWORD_FILE")"
 DATADIR="/var/lib/mysql"
 RUNDIR="/run/mysqld"
 
-# Ensure runtime dirs/ownership (important with bind mounts)
-mkdir -p "$RUNDIR" "$DATADIR"
-chown -R mysql:mysql "$RUNDIR" "$DATADIR"
 
 # Initialize database if not already done
 if [ ! -d "${DATADIR}/mysql" ]; then
@@ -28,7 +25,7 @@ if [ ! -d "${DATADIR}/mysql" ]; then
   mariadb-install-db --user=mysql --basedir=/usr --datadir="$DATADIR" >/dev/null
 
   echo "🚀 Running bootstrap SQL…"
-  mysqld --user=mysql --bootstrap <<EOF
+  mysqld --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
 -- Secure root and prepare app database
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 

@@ -9,8 +9,7 @@ FROM alpine:3.21
 # rm -rf /var/cache/apk/* is used to clean up the package cache to reduce image size
 RUN apk update && apk add --no-cache \
     mariadb mariadb-client \
-    bash util-linux \
- && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/*
 
 # Create the MariaDB runtime directory and set proper ownership
 # /run/mysqld is where MariaDB stores its socket file and PID file
