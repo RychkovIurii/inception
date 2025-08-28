@@ -6,13 +6,16 @@
 #    By: irychkov <irychkov@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/26 09:53:53 by irychkov          #+#    #+#              #
-#    Updated: 2025/08/26 15:41:46 by irychkov         ###   ########.fr        #
+#    Updated: 2025/08/28 14:32:18 by irychkov         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME=inception
 
 all:
+	@if ! grep -q irychkov /etc/hosts; then \
+		echo 127.0.0.1	irychkov.42.fr | sudo tee -a /etc/hosts; \
+	fi
 	@if [ ! -d "/home/irychkov/data/mariadb" ]; then \
 		mkdir -p /home/irychkov/data/mariadb; \
 	fi
@@ -31,6 +34,7 @@ fclean: down
 	@if [ -d "/home/irychkov/data/wordpress" ]; then \
 		rm -rf /home/irychkov/data/wordpress; \
 	fi
+	sudo sed -i '/irychkov.42.fr/d' /etc/hosts; \
 	docker system prune -af --volumes
 # rm -rf /home/irychkov/data
 # prune removes unused data, -a removes all unused images, not just dangling ones,
