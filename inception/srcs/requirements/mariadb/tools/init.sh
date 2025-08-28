@@ -16,7 +16,7 @@ MYSQL_ROOT_PASSWORD="$(trim_file "$MYSQL_ROOT_PASSWORD_FILE")"
 MYSQL_PASSWORD="$(trim_file "$MYSQL_PASSWORD_FILE")"
 
 DATADIR="/var/lib/mysql"
-RUNDIR="/run/mysqld"
+RUNDIR="/run/mariadbd"
 
 
 # Initialize database if not already done

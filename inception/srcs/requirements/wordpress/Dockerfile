@@ -31,8 +31,6 @@ RUN apk update && apk add --no-cache \
 	mariadb-client \
  && rm -rf /var/cache/apk/*
 
-RUN mkdir -p /var/www/wp
-
 # Set the working directory to the web root where WordPress files will be placed
 WORKDIR /var/www/wp
 
