@@ -25,7 +25,7 @@ if [ ! -d "${DATADIR}/mysql" ]; then
   mariadb-install-db --user=mysql --basedir=/usr --datadir="$DATADIR" >/dev/null
 
   echo "🚀 Running bootstrap SQL…"
-  mysqld --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
+  mariadbd --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
 -- Secure root and prepare app database
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 
@@ -38,5 +38,5 @@ FLUSH PRIVILEGES;
 EOF
 fi
 
-# Hand off to mysqld in foreground (no hacks)
-exec mysqld --user=mysql --console --bind-address=0.0.0.0 --port=3306
+# Hand off to mariadbd in foreground (no hacks)
+exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --port=3306
