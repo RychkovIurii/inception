@@ -19,7 +19,7 @@ echo "🔐 [DEBUG]User password: ${MYSQL_PASSWORD:-<empty>}"
 echo "ℹ️  Database: ${MYSQL_DATABASE}"
 echo "ℹ️  User: ${MYSQL_USER}"
 DATADIR="/var/lib/mysql"
-RUNDIR="/run/mysqld"
+RUNDIR="/run/mariadbd"
 
 
 # Initialize database if not already done
@@ -28,8 +28,9 @@ if [ ! -d "${DATADIR}/mysql" ]; then
   mariadb-install-db --user=mysql --basedir=/usr --datadir="$DATADIR" >/dev/null
 
   echo "🚀 Running bootstrap SQL…"
-  mysqld --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
+  mariadbd --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
 -- Secure root and prepare app database
+FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`
@@ -37,10 +38,12 @@ CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`
 
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+DELETE FROM mysql.user WHERE user='';
+DROP DATABASE IF EXISTS test;
 FLUSH PRIVILEGES;
 EOF
 fi
 echo "✅ MariaDB datadir is ready."
 
-# Hand off to mysqld in foreground (no hacks)
-exec mysqld --user=mysql --console --bind-address=0.0.0.0 --socket="$RUNDIR/mysqld.sock"
+# Hand off to mariadbd in foreground (no hacks)
+exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --socket="$RUNDIR/mariadbd.sock"
