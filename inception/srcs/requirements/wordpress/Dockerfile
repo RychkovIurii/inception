@@ -12,6 +12,7 @@ FROM alpine:3.21
 # - php83-gd: Image processing and manipulation
 # - php83-zip: ZIP file handling
 # - php83-curl: Client URL library for making HTTP requests
+# - php83-phar: PHP Archive support
 # Additional tools:
 # - curl: Command-line tool for transferring data with URLs
 # - tar: Utility for handling tar archives
@@ -26,6 +27,7 @@ RUN apk update && apk add --no-cache \
     php83-gd \
 	php83-zip \
     php83-curl \
+	php83-phar \
     curl \
 	tar \
 	mariadb-client \
