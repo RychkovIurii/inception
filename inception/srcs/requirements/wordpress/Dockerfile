@@ -71,10 +71,6 @@ COPY conf/www.conf /etc/php83/php-fpm.d/www.conf
 # Expose the port used by PHP-FPM
 EXPOSE 9000
 
-# Switch to the non-root user 'www-data' for security best practices
-# Running the web server as a non-root user reduces security risks
-USER www-data
-
 # Set the initialization script as the container's entry point
 # This script will configure WordPress, connect to the database, and start PHP-FPM
 ENTRYPOINT ["/init.sh"]
