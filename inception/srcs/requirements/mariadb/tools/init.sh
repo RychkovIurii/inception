@@ -13,8 +13,11 @@ need MYSQL_PASSWORD_FILE
 
 # --- secrets (trim newline) ---
 MYSQL_ROOT_PASSWORD="$(trim_file "$MYSQL_ROOT_PASSWORD_FILE")"
+echo "🔐 [DEBUG]Root password: ${MYSQL_ROOT_PASSWORD:-<empty>}"
 MYSQL_PASSWORD="$(trim_file "$MYSQL_PASSWORD_FILE")"
-
+echo "🔐 [DEBUG]User password: ${MYSQL_PASSWORD:-<empty>}"
+echo "ℹ️  Database: ${MYSQL_DATABASE}"
+echo "ℹ️  User: ${MYSQL_USER}"
 DATADIR="/var/lib/mysql"
 RUNDIR="/run/mariadbd"
 
