@@ -40,6 +40,7 @@ GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
 FLUSH PRIVILEGES;
 EOF
 fi
+echo "✅ MariaDB datadir is ready."
 
 # Hand off to mariadbd in foreground (no hacks)
 exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --datadir="$DATADIR" --socket="$RUNDIR/mariadb.sock"
