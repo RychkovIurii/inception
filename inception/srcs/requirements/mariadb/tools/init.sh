@@ -39,4 +39,4 @@ EOF
 fi
 
 # Hand off to mariadbd in foreground (no hacks)
-exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --port=3306
+exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --datadir="$DATADIR" --socket="$RUNDIR/mariadb.sock"
