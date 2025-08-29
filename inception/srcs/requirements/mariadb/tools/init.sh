@@ -25,7 +25,7 @@ RUNDIR="/run/mariadbd"
 # Initialize database if not already done
 if [ ! -d "${DATADIR}/mysql" ]; then
   echo "🔧 Initializing MariaDB datadir..."
-  mariadb-install-db --user=mysql --basedir=/usr --skip-networking --datadir="$DATADIR" >/dev/null
+  mariadb-install-db --user=mysql --basedir=/usr --datadir="$DATADIR" >/dev/null
 
   echo "🚀 Running bootstrap SQL…"
   mariadbd --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
@@ -43,7 +43,13 @@ DROP DATABASE IF EXISTS test;
 FLUSH PRIVILEGES;
 EOF
 fi
+
+sed -i '/^[[:space:]]*skip-networking[[:space:]]*$/d' /etc/my.cnf.d/mariadb-server.cnf
+sed -i 's/^[[:space:]]*bind-address[[:space:]]*=.*/bind-address = 0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+cat /etc/my.cnf.d/mariadb-server.cnf
+
 echo "✅ MariaDB datadir is ready."
 
 # Hand off to mariadbd in foreground (no hacks)
-exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --port=3306 --socket="$RUNDIR/mariadbd.sock"
+exec mariadbd-safe
+#exec mariadbd --user=mysql --console --bind-address=0.0.0.0 --port=3306 --socket="$RUNDIR/mariadbd.sock"
