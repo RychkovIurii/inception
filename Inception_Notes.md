@@ -74,7 +74,7 @@ touch ~/inception/secrets/db_root_password.txt
 
 ---
 
-#### 🔧 Create a basic Makefile
+#### 🔧 Create a basic Makefile (project-scoped)
 
 Edit `Makefile` and paste:
 
@@ -82,13 +82,24 @@ Edit `Makefile` and paste:
 NAME=inception
 
 all:
+	@if ! grep -q irychkov /etc/hosts; then \
+		echo 127.0.0.1	irychkov.42.fr | sudo tee -a /etc/hosts; \
+	fi
+	@if [ ! -d "/home/irychkov/data/mariadb" ]; then \
+		mkdir -p /home/irychkov/data/mariadb; \
+	fi
+	@if [ ! -d "/home/irychkov/data/wordpress" ]; then \
+		mkdir -p /home/irychkov/data/wordpress; \
+	fi
 	docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
 
 down:
-	docker compose -f srcs/docker-compose.yml down
+	docker compose -f srcs/docker-compose.yml down --remove-orphans
 
-fclean: down
-	docker system prune -af --volumes
+fclean:
+	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi local --volumes --remove-orphans
+	@if [ -d "/home/irychkov/data" ]; then rm -rf /home/irychkov/data; fi
+	sudo sed -i '/irychkov.42.fr/d' /etc/hosts
 
 re: fclean all
 ```
@@ -141,14 +152,22 @@ MYSQL_USER=wp_user
 MYSQL_PASSWORD_FILE=/run/secrets/db_password
 
 # WORDPRESS
-WORDPRESS_DB_HOST=mariadb:3306
+WORDPRESS_DB_HOST=mariadb
 WORDPRESS_DB_NAME=wordpress
 WORDPRESS_DB_USER=wp_user
 WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
+
+# ADMIN USER
 WP_ADMIN_USER=main_user
 WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
 WP_ADMIN_EMAIL=admin@irychkov.42.fr
 WP_SITE_TITLE=Inception42
+
+# SECOND USER
+WP_SECOND_USER=irychkov
+WP_SECOND_PASSWORD_FILE=/run/secrets/credentials
+WP_SECOND_EMAIL=irychkov@42.fr
+WP_SECOND_ROLE=author
 ```
 
 ---
@@ -222,8 +241,6 @@ nano ~/inception/srcs/docker-compose.yml
 Paste the following:
 
 ```yaml
-version: "3.8"
-
 services:
 	mariadb:
 		container_name: mariadb
@@ -232,6 +249,12 @@ services:
 		secrets:
 			- db_root_password
 			- db_password
+		healthcheck:
+		test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-P", "3306"]
+		start_period: 90s
+		interval: 10s
+		timeout: 5s
+		retries: 10
 		volumes:
 			- mariadb_data:/var/lib/mysql
 		networks:
@@ -246,11 +269,12 @@ services:
 			- db_password
 			- credentials
 		volumes:
-			- wordpress_data:/var/www/html
+			- wordpress_data:/var/www/wp
 		depends_on:
-			- mariadb
+		mariadb:
+			condition: service_healthy
 		networks:
-			- inception
+		- inception
 		restart: unless-stopped
 
 	nginx:
@@ -258,7 +282,10 @@ services:
 		build: ./requirements/nginx
 		env_file: .env
 		volumes:
-			- wordpress_data:/var/www/html
+			- wordpress_data:/var/www/wp:ro   # <-- read-only to nginx
+	#    secrets: # Optional: Use your own SSL certs or let Nginx create self-signed ones
+	#      - ssl_cert
+	#      - ssl_key
 		ports:
 			- "443:443"
 		depends_on:
@@ -294,6 +321,11 @@ secrets:
 		file: ../secrets/db_password.txt
 	credentials:
 		file: ../secrets/credentials.txt
+	# Optional: Use your own SSL certs or let Nginx create self-signed ones
+	#  ssl_cert:
+	#    file: ../secrets/ssl_cert.pem
+	#  ssl_key:
+	#    file: ../secrets/ssl_key.pem
 ```
 
 ---
@@ -356,4 +388,3 @@ We'll configure the NGINX container.
 ## 🖋️ Step 8: NGINX Setup with TLS — Dockerfile and Configuration
 
 Follow the step-by-step instructions in `nginx.md`.
-

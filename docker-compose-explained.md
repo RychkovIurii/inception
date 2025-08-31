@@ -70,15 +70,16 @@ wordpress:
 
 ```yaml
   volumes:
-    - wordpress_data:/var/www/html
+    - wordpress_data:/var/www/wp
 ```
-- Mounts persistent storage to serve WordPress files.
+- Mounts persistent storage to serve WordPress files under `/var/www/wp`.
 
 ```yaml
   depends_on:
-    - mariadb
+    mariadb:
+      condition: service_healthy
 ```
-- Ensures mariadb container starts before wordpress.
+- Waits for MariaDB to be healthy before starting WordPress.
 
 ```yaml
   networks:
@@ -101,7 +102,7 @@ nginx:
 
 ```yaml
   volumes:
-    - wordpress_data:/var/www/html
+    - wordpress_data:/var/www/wp:ro
 ```
 - Mounts the same WordPress volume (read-only from nginx).
 
@@ -169,12 +170,12 @@ secrets:
 ```
 - Maps a file on the host into `/run/secrets/db_root_password` in the container.
 
-Other secrets follow the same pattern.
+Other secrets follow the same pattern. Inside containers, secrets are mounted at `/run/secrets/<name>` (no `.txt` suffix).
 
 ---
 
 ✅ With this structure:
 - nginx is the only entrypoint (port 443),
-- mariadb stores data persistently,
-- secrets are securely injected,
+- mariadb stores data persistently and is health-checked,
+- secrets are securely injected (mounted at `/run/secrets/...`),
 - all containers are isolated in a private network.

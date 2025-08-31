@@ -25,11 +25,12 @@ Work in:
 File: `~/inception/srcs/requirements/nginx/Dockerfile`
 
 ```Dockerfile
-FROM alpine:3.18
+FROM alpine:3.21
 
 RUN apk update && apk add --no-cache \
     nginx \
-    openssl
+    openssl \
+  && rm -rf /var/cache/apk/*
 
 # Create directory for SSL certs
 RUN mkdir -p /etc/nginx/ssl
@@ -39,6 +40,7 @@ COPY conf/default.conf /etc/nginx/http.d/default.conf
 COPY tools/init.sh /init.sh
 RUN chmod +x /init.sh
 
+EXPOSE 443
 ENTRYPOINT ["/init.sh"]
 ```
 
@@ -50,17 +52,29 @@ File: `~/inception/srcs/requirements/nginx/tools/init.sh`
 
 ```bash
 #!/bin/sh
+set -eu
 
-# Generate self-signed cert if not exists
-if [ ! -f /etc/nginx/ssl/nginx.crt ]; then
-  openssl req -x509 -nodes -days 365 \
-    -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key \
-    -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=FR/ST=42/L=Paris/O=42/OU=Student/CN=${DOMAIN_NAME}"
+SSL_CERT_SRC="${SSL_CERT_SRC:-/run/secrets/ssl_cert}"
+SSL_KEY_SRC="${SSL_KEY_SRC:-/run/secrets/ssl_key}"
+SSL_CERT_DST="/etc/nginx/ssl/tls.crt"
+SSL_KEY_DST="/etc/nginx/ssl/tls.key"
+DOMAIN="${DOMAIN_NAME:-localhost}"
+
+if [ -f "$SSL_CERT_SRC" ] && [ -f "$SSL_KEY_SRC" ]; then
+  cp "$SSL_CERT_SRC" "$SSL_CERT_DST" && cp "$SSL_KEY_SRC" "$SSL_KEY_DST"
+  chmod 600 "$SSL_KEY_DST"
+else
+  if [ ! -f "$SSL_CERT_DST" ] || [ ! -f "$SSL_KEY_DST" ]; then
+    openssl req -x509 -nodes -days 365 \
+      -newkey rsa:2048 \
+      -keyout "$SSL_KEY_DST" \
+      -out   "$SSL_CERT_DST" \
+      -subj "/CN=${DOMAIN}"
+    chmod 600 "$SSL_KEY_DST"
+  fi
 fi
 
-# Start nginx in foreground
+mkdir -p /var/www/wp
 exec nginx -g 'daemon off;'
 ```
 
@@ -81,12 +95,11 @@ server {
     listen 443 ssl;
     server_name ${DOMAIN_NAME};
 
-    ssl_certificate     /etc/nginx/ssl/nginx.crt;
-    ssl_certificate_key /etc/nginx/ssl/nginx.key;
-
+    ssl_certificate     /etc/nginx/ssl/tls.crt;
+    ssl_certificate_key /etc/nginx/ssl/tls.key;
     ssl_protocols TLSv1.2 TLSv1.3;
 
-    root /var/www/html;
+    root /var/www/wp;
     index index.php index.html;
 
     location / {
@@ -96,7 +109,9 @@ server {
     location ~ \.php$ {
         fastcgi_pass wordpress:9000;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME /var/www/wp$fastcgi_script_name;
+        fastcgi_param HTTPS on;
+        try_files $uri =404;
         fastcgi_index index.php;
     }
 }
@@ -115,7 +130,7 @@ ports:
 - The service shares the WordPress volume:
 ```yaml
 volumes:
-  - wordpress_data:/var/www/html
+  - wordpress_data:/var/www/wp:ro
 ```
 
 - And reads env vars from `.env`:
@@ -134,10 +149,7 @@ cd ~/inception
 make
 ```
 
-Then open in browser:
-```
-https://irychkov.42.fr
-```
+Then open in browser: https://irychkov.42.fr (port 443)
 
 Make sure your browser says “connection secure” (it will be self-signed, so accept the warning).
 

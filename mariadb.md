@@ -24,20 +24,19 @@ You should be inside:
 File: `~/inception/srcs/requirements/mariadb/Dockerfile`
 
 ```Dockerfile
-FROM alpine:3.18
+FROM alpine:3.21
 
-RUN apk update && apk add --no-cache mariadb mariadb-client su-exec openrc
+RUN apk update && apk add --no-cache \
+    mariadb mariadb-client \
+ && rm -rf /var/cache/apk/*
 
-# Create necessary directories
-RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
+RUN mkdir -p /run/mariadbd /var/lib/mysql /var/log/mysql \
+ && chown -R mysql:mysql /run/mariadbd /var/lib/mysql /var/log/mysql
 
-# Copy initialization script
 COPY tools/init.sh /init.sh
 RUN chmod +x /init.sh
 
-# Use mariadb user and launch the DB properly
-USER mysql
-
+EXPOSE 3306
 ENTRYPOINT ["/init.sh"]
 ```
 
@@ -49,25 +48,35 @@ File: `~/inception/srcs/requirements/mariadb/tools/init.sh`
 
 ```bash
 #!/bin/sh
+set -eu
 
-# Read secrets from mounted secret files
-MYSQL_ROOT_PASSWORD=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
-MYSQL_PASSWORD=$(cat "$MYSQL_PASSWORD_FILE")
+trim_file() { tr -d '\r\n' < "$1"; }
+need() { eval "v=\${$1:-}"; [ -n "$v" ] || { echo "❌ Missing env: $1" >&2; exit 1; }; }
 
-# Initialize database if not already done
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-  mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+need MYSQL_DATABASE
+need MYSQL_USER
+need MYSQL_ROOT_PASSWORD_FILE
+need MYSQL_PASSWORD_FILE
 
-  mysqld --user=mysql --bootstrap <<EOF
+MYSQL_ROOT_PASSWORD="$(trim_file "$MYSQL_ROOT_PASSWORD_FILE")"
+MYSQL_PASSWORD="$(trim_file "$MYSQL_PASSWORD_FILE")"
+DATADIR="/var/lib/mysql"
+
+if [ ! -d "${DATADIR}/mysql" ]; then
+  mariadb-install-db --user=mysql --basedir=/usr --datadir="$DATADIR" >/dev/null
+  mariadbd --user=mysql --bootstrap --datadir="$DATADIR" <<EOF
 FLUSH PRIVILEGES;
-CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+DELETE FROM mysql.user WHERE user='';
+DROP DATABASE IF EXISTS test;
 FLUSH PRIVILEGES;
 EOF
 fi
 
-exec mysqld --user=mysql --console
+exec mariadbd-safe
 ```
 
 Then make it executable:
@@ -80,15 +89,15 @@ chmod +x ~/inception/srcs/requirements/mariadb/tools/init.sh
 
 ## 🟩 3. Make sure `.env` and secrets are ready
 
-Required variables in `.env`:
+Required variables in `.env` (note: secrets mount to `/run/secrets/<name>`, no `.txt`):
 ```
-MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password.txt
+MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-MYSQL_PASSWORD_FILE=/run/secrets/db_password.txt
+MYSQL_PASSWORD_FILE=/run/secrets/db_password
 ```
 
-Secrets needed in `/secrets/`:
+Secrets needed in `secrets/` (outside `srcs/`):
 - `db_root_password.txt`
 - `db_password.txt`
 

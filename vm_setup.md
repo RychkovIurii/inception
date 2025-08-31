@@ -56,6 +56,8 @@ Follow the step-by-step instructions in `docker-install.md`.
 ---
 ### 6️⃣ Map domain name to hosts on VM
 
+Note: `make` automatically adds `127.0.0.1 irychkov.42.fr` to `/etc/hosts`. You can also do it manually:
+
 ```bash
 echo "127.0.0.1 irychkov.42.fr" | sudo tee -a /etc/hosts
 ```
@@ -132,7 +134,7 @@ Add:
 
 ---
 
-### ✅ Verify
+### ✅ Verify (port 443)
 
 Run:
 ```bash

@@ -132,12 +132,29 @@ restart: always | no | on-failure | unless-stopped
 ## 🔹 Useful Docker Compose CLI Commands
 
 ```bash
-docker compose up --build      # Build and run containers
-docker compose down            # Stop and remove containers, network, etc.
-docker compose ps              # Show running services
-docker compose logs -f         # Show logs in real-time
-docker compose exec service sh  # Get shell access
-docker compose config          # View expanded and validated config
+docker compose up --build                     # Build and run containers
+docker compose down --remove-orphans          # Stop and remove containers, network, etc.
+docker compose ps                             # Show running services
+docker compose logs -f                        # Show logs in real-time
+docker compose exec service sh                # Get shell access
+docker compose config                         # View expanded and validated config
+```
+
+---
+
+## 🔹 This Project (scoped commands)
+
+From the repository root:
+
+```bash
+# Up/Build (uses srcs/.env explicitly)
+docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
+
+# Down, remove orphans
+docker compose -f srcs/docker-compose.yml down --remove-orphans
+
+# Full cleanup for this project only (images/volumes built/used here)
+docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi local --volumes --remove-orphans
 ```
 
 ---

@@ -32,49 +32,61 @@ cd inception/inception
 Create `srcs/.env` with the following required variables:
 
 ```bash
-# Domain and SSL Configuration
-DOMAIN_NAME=example.com
+# DOMAIN
+DOMAIN_NAME=irychkov.42.fr
 
-# Database Configuration
+# MYSQL (MariaDB)
+MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wp_user
-WORDPRESS_DB_HOST=mariadb
-WORDPRESS_DB_USER=wp_user
-WORDPRESS_DB_NAME=wordpress
+MYSQL_PASSWORD_FILE=/run/secrets/db_password
 
-# WordPress Admin Configuration
-WP_ADMIN_USER=admin
-WP_ADMIN_EMAIL=admin@example.com
-WP_SITE_TITLE=MySite
+# WORDPRESS
+WORDPRESS_DB_HOST=mariadb
+WORDPRESS_DB_NAME=wordpress
+WORDPRESS_DB_USER=wp_user
+WORDPRESS_DB_PASSWORD_FILE=/run/secrets/db_password
+
+# ADMIN USER
+WP_ADMIN_USER=main_user
+WP_ADMIN_PASSWORD_FILE=/run/secrets/credentials
+WP_ADMIN_EMAIL=admin@irychkov.42.fr
+WP_SITE_TITLE=Inception42
+
+# SECOND USER
+WP_SECOND_USER=irychkov
+WP_SECOND_PASSWORD_FILE=/run/secrets/credentials
+WP_SECOND_EMAIL=irychkov@42.fr
+WP_SECOND_ROLE=author
 ```
 
 #### Configure Secrets
-Place password/credential values into the secrets directory:
+Place password/credential values into the secrets directory (outside `srcs/`):
 
 ```bash
 # Create secrets directory if it doesn't exist
-mkdir -p srcs/secrets/
+mkdir -p secrets/
 
 # Add your passwords to these files:
-echo "your_root_password" > srcs/secrets/db_root_password.txt
-echo "your_db_password" > srcs/secrets/db_password.txt
-echo "your_wp_admin_password" > srcs/secrets/credentials.txt
+echo "your_root_password" > secrets/db_root_password.txt
+echo "your_db_password" > secrets/db_password.txt
+echo "your_wp_admin_password" > secrets/credentials.txt
 ```
 
 ## Deployment
 
 ### 1. Build and Start the Stack
 ```bash
-make            # Runs: docker compose -f srcs/docker-compose.yml up --build
+make            # Runs: docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
 ```
 
 ### 2. Alternative Docker Commands
 ```bash
-# Manual build and start
-docker compose -f srcs/docker-compose.yml up --build
+# Manual build and start (explicit env-file)
+docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
 
 # Start in detached mode
-docker compose -f srcs/docker-compose.yml up --build -d
+docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build -d
 ```
 
 ## Verification Steps
@@ -102,17 +114,17 @@ docker compose -f srcs/docker-compose.yml logs mariadb
 ### 3. Test Application Access
 
 #### Web Browser Access
-- Navigate to: `https://<your-server-hostname>:8443`
+- Navigate to: `https://irychkov.42.fr` (port 443)
 - **Note**: You'll see a security warning due to the self-signed certificate
 - Click "Advanced" → "Proceed to site" to continue
 
 #### Command Line Testing
 ```bash
 # Test from the server itself
-curl -k https://localhost:8443
+curl -k https://localhost:443
 
 # Test with verbose output
-curl -kv https://localhost:8443
+curl -kv https://localhost:443
 
 # Expected: HTML response from WordPress
 ```
@@ -159,24 +171,24 @@ docker compose -f srcs/docker-compose.yml restart <service_name>
 
 ### 1. Stop Services
 ```bash
-make down     # Stops containers but preserves volumes
+make down     # Stops containers but preserves volumes (removes orphans)
 ```
 
 ### 2. Complete Cleanup (Destructive)
 ```bash
-make fclean   # Stops containers, removes volumes and images
+make fclean   # Project-scoped cleanup: containers, volumes, locally-built images
 ```
 
 ### 3. Manual Cleanup
 ```bash
 # Stop and remove containers
-docker compose -f srcs/docker-compose.yml down
+docker compose -f srcs/docker-compose.yml down --remove-orphans
 
 # Remove volumes (data loss!)
-docker compose -f srcs/docker-compose.yml down -v
+docker compose -f srcs/docker-compose.yml down --volumes --remove-orphans
 
-# Remove images
-docker compose -f srcs/docker-compose.yml down --rmi all
+# Remove images built for this project
+docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi local --volumes --remove-orphans
 ```
 
 ## Success Criteria
@@ -195,7 +207,7 @@ docker compose -f srcs/docker-compose.yml down --rmi all
 │     nginx       │    │   wordpress     │    │    mariadb      │
 │   (reverse      │    │   (php-fpm)     │    │   (database)    │
 │    proxy)       │◄──►│                 │◄──►│                 │
-│   Port: 8443    │    │   Port: 9000    │    │   Port: 3306    │
+│   Port: 443     │    │   Port: 9000    │    │   Port: 3306    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │
          ▼
