@@ -3,8 +3,6 @@ services:
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
-    #ports:
-    #  - "3306:3306"
     env_file: .env
     secrets:
       - db_root_password

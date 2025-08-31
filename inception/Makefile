@@ -6,7 +6,7 @@
 #    By: irychkov <irychkov@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/26 09:53:53 by irychkov          #+#    #+#              #
-#    Updated: 2025/08/28 15:28:22 by irychkov         ###   ########.fr        #
+#    Updated: 2025/08/31 17:42:59 by irychkov         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,9 +28,14 @@ all:
 	docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
 
 down:
-	docker compose -f srcs/docker-compose.yml down
+# docker compose -f srcs/docker-compose.yml down
+	docker compose -f srcs/docker-compose.yml down --remove-orphans
 
-fclean: down
+fclean:
+# down
+	# Stop and remove this project's resources only
+	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi local --volumes --remove-orphans
+# docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi local --volumes --remove-orphans
 	@if [ -d "/home/irychkov/data/mariadb" ]; then \
 		rm -rf /home/irychkov/data/mariadb; \
 	fi
@@ -40,8 +45,8 @@ fclean: down
 	@if [ -d "/home/irychkov/data" ]; then \
 		rm -rf /home/irychkov/data; \
 	fi
-	sudo sed -i '/irychkov.42.fr/d' /etc/hosts; \
-	docker system prune -af --volumes
+	sudo sed -i '/irychkov.42.fr/d' /etc/hosts
+# docker system prune -a -f --volumes
 # prune removes unused data, -a removes all unused images, not just dangling ones,
 # -f forces the removal without confirmation, --volumes removes all unused volumes
 
