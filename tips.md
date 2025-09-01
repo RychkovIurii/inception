@@ -120,3 +120,7 @@ SHOW TABLES;
 - Login to WordPress:
   - Visit `wp-admin` and create a post/comment.
 - Login to MariaDB as root and inspect the DB.
+
+### Data transfer using SCP and SSH
+scp -P 2222 -r /home/irychkov/Desktop/test irychkov@127.0.0.1:/home/irychkov/
+ssh -p 2222 irychkov@127.0.0.1
