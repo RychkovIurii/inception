@@ -2,7 +2,11 @@
 services:
   mariadb:
     container_name: mariadb
-    build: ./requirements/mariadb
+    build:
+      context: ./requirements/mariadb
+      labels:
+        - project=inception
+    image: irychkov_mariadb:v1
     env_file: .env
     secrets:
       - db_root_password
@@ -21,7 +25,11 @@ services:
 
   wordpress:
     container_name: wordpress
-    build: ./requirements/wordpress
+    build:
+      context: ./requirements/wordpress
+      labels:
+        - project=inception
+    image: irychkov_wordpress:v1
     env_file: .env
     secrets:
       - db_password
@@ -37,7 +45,11 @@ services:
 
   nginx:
     container_name: nginx
-    build: ./requirements/nginx
+    build:
+      context: ./requirements/nginx
+      labels:
+        - project=inception
+    image: irychkov_nginx:v1
     env_file: .env
     volumes:
       - wordpress_data:/var/www/wp:ro   # <-- read-only to nginx
@@ -54,6 +66,8 @@ services:
 
 volumes:
   mariadb_data:
+    labels:
+      - project=inception
     driver: local
     name: mariadb_data
     driver_opts:
@@ -61,6 +75,8 @@ volumes:
       o: bind
       device: /home/irychkov/data/mariadb
   wordpress_data:
+    labels:
+      - project=inception
     driver: local
     name: wordpress_data
     driver_opts:
@@ -70,6 +86,8 @@ volumes:
 
 networks:
   inception:
+    labels:
+      - project=inception
     driver: bridge
 
 secrets:
